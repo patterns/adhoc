@@ -9,14 +9,25 @@ import (
 	adhoc "github.com/patterns/adhoc/proto"
 )
 
+var plog *adhoc.Plog
+
 func main() {
 	infile := flag.String("infile", "txnlog.dat", "Path to binary (log) file")
+	verbose := flag.Bool("verbose", false, "Enable extra messages")
 	flag.Parse()
+	var err error
+	plog, err = adhoc.NewLog(*verbose)
+	if err != nil {
+		fmt.Println("Debug logger failed")
+		return
+	}
+	defer plog.Close()
 
 	f, err := os.Open(*infile)
 	if err != nil {
-		fmt.Printf("Error file open - %s\n", infile)
-		return
+		plog.Verbose(fmt.Sprintf("Error file open - %s", *infile))
+		// Raise the exception
+		panic(err)
 	}
 	defer f.Close()
 
@@ -28,21 +39,31 @@ func main() {
 	version := byte(1)
 	vok := parser.Compatible(version)
 	if !vok {
-		fmt.Printf("Incorrect MPS7 version - expecting %d\n", version)
+		plog.Verbose(fmt.Sprintf("Incorrect MPS7 version - expecting %d", version))
 		return
 	}
 
-	m := loadMap(parser)
+	m, tot := loadMap(parser)
 
-	fmt.Println()
+	// Show summary
+	plog.Info(fmt.Sprintf("total credit amount=%.2f", tot[adhoc.Credit]))
+	plog.Info(fmt.Sprintf("total debit amount=%.2f", tot[adhoc.Debit]))
+	plog.Info(fmt.Sprintf("autopays started=%d", int(tot[adhoc.StartAutopay])))
+	plog.Info(fmt.Sprintf("autopays ended=%d", int(tot[adhoc.EndAutopay])))
 	uid := uint64(2456938384156277127)
-	fmt.Printf("balance for user %d=%.2f \n", uid, m[uid])
+	plog.Info(fmt.Sprintf("balance for user %d=%.2f", uid, m[uid]))
 }
 
-func loadMap(parser adhoc.Mps7) map[uint64]float64 {
+// loadMap loops through records and makes calculations
+func loadMap(parser adhoc.Mps7) (map[uint64]float64, map[adhoc.Rtype]float64) {
 	var rec adhoc.Record
 	var err error
+
+	// initialize the results maps
 	m := map[uint64]float64{}
+	tot := map[adhoc.Rtype]float64{}
+	tot[adhoc.Credit] = 0
+	tot[adhoc.Debit] = 0
 
 	for i := uint32(0); i < parser.Len(); i++ {
 		rec, err = parser.Next()
@@ -50,18 +71,28 @@ func loadMap(parser adhoc.Mps7) map[uint64]float64 {
 			panic(err)
 		}
 
-		fmt.Printf("%d) %s\n", i, rec)
+		plog.Verbose(fmt.Sprintf("%d) %s", i, rec))
 
 		switch rec.Rectype {
+		case adhoc.StartAutopay, adhoc.EndAutopay:
+			if count, ok := tot[rec.Rectype]; ok {
+				tot[rec.Rectype] = count + 1
+			} else {
+				tot[rec.Rectype] = 1
+			}
+
 		case adhoc.Debit, adhoc.Credit:
+			// Accumulate money of user
 			sum := rec.Dollars
-			dol, ok := m[rec.User]
-			if ok {
+			if dol, ok := m[rec.User]; ok {
 				sum = sum + dol
 			}
 			m[rec.User] = sum
+
+			// Also total the money as aggregate
+			tot[rec.Rectype] = tot[rec.Rectype] + rec.Dollars
 		}
 	}
 
-	return m
+	return m, tot
 }
