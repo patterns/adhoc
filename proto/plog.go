@@ -9,11 +9,12 @@ import (
 )
 
 type Plog struct {
+	// Embed the native logger
 	log.Logger
-	verbose bool
 
-	writer *os.File
-	prefix string
+	verbose bool
+	writer  *os.File
+	prefix  string
 }
 
 func NewLog(verbose bool) (pl *Plog, err error) {
@@ -44,7 +45,7 @@ func NewLog(verbose bool) (pl *Plog, err error) {
 	return
 }
 
-// Print writes message to stdout and log
+// Info writes message to stdout and log
 func (p *Plog) Info(msg string) {
 	fmt.Println(msg)
 
@@ -53,7 +54,7 @@ func (p *Plog) Info(msg string) {
 	}
 }
 
-// Log writes message to log
+// Verbose writes message to log
 func (p *Plog) Verbose(msg string) {
 	// Verbose lines are skipped when
 	// verbose flag is not enabled

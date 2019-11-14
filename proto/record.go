@@ -4,6 +4,13 @@ import (
 	"fmt"
 )
 
+type Record struct {
+	Rectype Rtype
+	stamp   uint32
+	User    uint64
+	Dollars float64
+}
+
 type Rtype byte
 
 const (
@@ -12,13 +19,6 @@ const (
 	StartAutopay
 	EndAutopay
 )
-
-type Record struct {
-	Rectype Rtype
-	stamp   uint32
-	User    uint64
-	Dollars float64
-}
 
 func (r Record) String() string {
 	return fmt.Sprintf("%s, %d, %d - %f",
