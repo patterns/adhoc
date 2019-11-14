@@ -1,4 +1,4 @@
-package adhoc
+package proto
 
 import (
 	"bytes"
@@ -47,7 +47,10 @@ func TestHeader(t *testing.T) {
 	par := NewParser(nb)
 
 	// Direct call to the Header matching
-	hd := par.header()
+	hd, err := par.header()
+	if err != nil {
+		t.Error("Failed header extraction")
+	}
 
 	if hd.Len() != explength {
 		t.Errorf("Expected Header length %d, got %d", explength, hd.Len())

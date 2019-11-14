@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/patterns/adhoc"
 	"os"
+
+	adhoc "github.com/patterns/adhoc/proto"
 )
 
 func main() {

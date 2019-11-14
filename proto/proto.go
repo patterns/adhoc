@@ -1,11 +1,9 @@
-package adhoc
+package proto
 
 import (
 	"encoding/binary"
-	"fmt"
 	"github.com/pkg/errors"
 	"io"
-	"log"
 	"math"
 )
 
@@ -16,38 +14,21 @@ type Mps7 struct {
 	state pstate
 }
 
-// Header is the print friendly translation of the header fields
-type Header struct {
-	magic   string
-	version byte
-	length  uint32
-}
-
-type pstate int
+// pstate are the different parser stages
+type pstate uint32
 
 const (
-	None pstate = iota
+	None pstate = 1 << iota
 	Starting
 	Compatible
 	Ready
+	Recovery
 )
 
-type Rtype byte
+// magictag is the required header prefix for protocol
+const magictag = "MPS7"
 
-const (
-	Debit Rtype = iota
-	Credit
-	StartAutopay
-	EndAutopay
-)
-
-type Record struct {
-	Rectype Rtype
-	stamp   uint32
-	User    uint64
-	Dollars float64
-}
-
+// NewParser makes a new parser given the input stream
 func NewParser(r io.Reader) Mps7 {
 	return Mps7{
 		rdr:   r,
@@ -55,21 +36,7 @@ func NewParser(r io.Reader) Mps7 {
 	}
 }
 
-// Magic is the magic field from the Header data
-func (h Header) Magic() string {
-	return h.magic
-}
-
-// Version is the version field from the Header data
-func (h Header) Version() byte {
-	return h.version
-}
-
-// Len is the record count from the Header data
-func (h Header) Len() uint32 {
-	return h.length
-}
-
+// Next extracts the record fields from the stream
 func (m Mps7) Next() (r Record, err error) {
 	r = Record{}
 	err = nil
@@ -117,7 +84,14 @@ func (m Mps7) Next() (r Record, err error) {
 	return
 }
 
-func (m Mps7) header() Header {
+// header extracts header fields
+func (m Mps7) header() (hdr Header, err error) {
+	err = nil
+	hdr = Header{}
+	if m.state != Starting {
+		err = errors.New("Wrong state - header already consumed")
+		return
+	}
 
 	// header format spec
 	var data struct {
@@ -128,56 +102,52 @@ func (m Mps7) header() Header {
 
 	// todo ?Do we want a reset-able reader and rewind to the beginning
 	// in case steps are done out-of-order
-	err := binary.Read(m.rdr, binary.BigEndian, &data)
+	err = binary.Read(m.rdr, binary.BigEndian, &data)
 	if err != nil {
-		log.Fatal("Header binary.Read failed:", err)
+		err = errors.Wrap(err, "Header binary.Read")
+		return
 	}
 
 	mag := string(data.Magic[:])
 	v := data.Version
 	l := binary.BigEndian.Uint32(data.Length[:])
 
-	return Header{magic: mag, version: v, length: l}
+	hdr = Header{magic: mag, version: v, length: l}
+	return
 }
 
+// Compatible checks version is supported
 func (m *Mps7) Compatible(ver byte) bool {
+	// todo ?Do we accept future/greater version values
+
+	// Re-entrant, only process header fields once
 	if m.state == Starting {
-		m.hdr = m.header()
+		var err error
+		m.hdr, err = m.header()
+		if err != nil {
+			// Mark parser state as in recovery,
+			// to do self-repair
+			m.state = Recovery
+			return false
+		}
 		m.state = Compatible
 	}
 
-	if m.hdr.version == ver && m.hdr.magic == "MPS7" {
+	if m.hdr.version == ver && m.hdr.magic == magictag {
 		m.state = Ready
 		return true
 	}
 	return false
 }
 
+// Len is the record count
 func (m Mps7) Len() uint32 {
-	if m.state < Compatible {
-		// todo ?Is this an (fatal) error or
-		return 0
+	if m.state&(Ready|Compatible) != 0 {
+		// Ready or Compatible state are when
+		// the header fields are okay
+		return m.hdr.Len()
 	}
-	return m.hdr.Len()
-}
 
-
-func (r Record) String() string {
-	return fmt.Sprintf("%s, %d, %d - %f",
-		r.Rectype, r.stamp, r.User, r.Dollars)
-}
-
-func (r Rtype) String() string {
-	switch r {
-	case Debit:
-		return "Debit"
-	case Credit:
-		return "Credit"
-	case StartAutopay:
-		return "StartAutopay"
-	case EndAutopay:
-		return "EndAutopay"
-	default:
-		return "None"
-	}
+	// todo ?Is this an (fatal) error or
+	return 0
 }
