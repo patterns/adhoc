@@ -1,23 +1,28 @@
 package proto
 
-// Header is the print friendly translation of the header fields
+// Header is the protocol header data
 type Header struct {
-	magic   string
+	prefix  string
 	version byte
 	length  uint32
 }
 
-// Magic is the magic field from the Header data
-func (h Header) Magic() string {
-	return h.magic
+// Prefix is the magic field from the header data
+func (h Header) Prefix() string {
+	return h.prefix
 }
 
-// Version is the version field from the Header data
+// Version is the version field from the header data
 func (h Header) Version() byte {
 	return h.version
 }
 
-// Len is the record count from the Header data
+// Len is the record count from the header data
 func (h Header) Len() uint32 {
 	return h.length
+}
+
+// Protocol is required for the ProtData interface
+func (h Header) Protocol() {
+	//todo indicate MPS7 support
 }

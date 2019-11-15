@@ -33,17 +33,17 @@ func main() {
 
 	r := bufio.NewReader(f)
 
-	parser := adhoc.NewParser(r)
+	helper := adhoc.NewHelper(r)
 
 	// Check that file version is compatible (with 1)
 	version := byte(1)
-	vok := parser.Compatible(version)
+	vok := helper.Compatible(version)
 	if !vok {
 		plog.Verbose(fmt.Sprintf("Incorrect MPS7 version - expecting %d", version))
 		return
 	}
 
-	m, tot := loadMap(parser)
+	kv, tot := loadMap(helper)
 
 	// Show summary
 	plog.Info(fmt.Sprintf("total credit amount=%.2f", tot[adhoc.Credit]))
@@ -51,11 +51,11 @@ func main() {
 	plog.Info(fmt.Sprintf("autopays started=%d", int(tot[adhoc.StartAutopay])))
 	plog.Info(fmt.Sprintf("autopays ended=%d", int(tot[adhoc.EndAutopay])))
 	uid := uint64(2456938384156277127)
-	plog.Info(fmt.Sprintf("balance for user %d=%.2f", uid, m[uid]))
+	plog.Info(fmt.Sprintf("balance for user %d=%.2f", uid, kv[uid]))
 }
 
 // loadMap loops through records and makes calculations
-func loadMap(parser adhoc.Mps7) (map[uint64]float64, map[adhoc.Rtype]float64) {
+func loadMap(helper adhoc.Helper) (map[uint64]float64, map[adhoc.Rtype]float64) {
 	var rec adhoc.Record
 	var err error
 
@@ -65,8 +65,8 @@ func loadMap(parser adhoc.Mps7) (map[uint64]float64, map[adhoc.Rtype]float64) {
 	tot[adhoc.Credit] = 0
 	tot[adhoc.Debit] = 0
 
-	for i := uint32(0); i < parser.Len(); i++ {
-		rec, err = parser.Next()
+	for i := uint32(0); i < helper.Len(); i++ {
+		rec, err = helper.Next()
 		if err != nil {
 			panic(err)
 		}

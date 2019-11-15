@@ -24,7 +24,7 @@ func NewLog(verbose bool) (pl *Plog, err error) {
 	// For verbose output, also write to file
 	if verbose {
 		// Re-purpose magic tag as prefix (may want as parameter)
-		pl.prefix = magictag
+		pl.prefix = prefixMPS7
 		var wd string
 		wd, err = os.Getwd()
 		if err != nil {

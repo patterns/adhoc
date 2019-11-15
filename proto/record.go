@@ -8,6 +8,8 @@ type Record struct {
 	Rectype Rtype
 	stamp   uint32
 	User    uint64
+
+	// todo ?eliminate because we embed the common fields
 	Dollars float64
 }
 
@@ -19,6 +21,11 @@ const (
 	StartAutopay
 	EndAutopay
 )
+
+// Protocol is required for ProtData interface
+func (r Record) Protocol() {
+	//todo indicate MPS7 support
+}
 
 func (r Record) String() string {
 	return fmt.Sprintf("%s, %d, %d - %f",
