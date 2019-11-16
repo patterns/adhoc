@@ -5,14 +5,14 @@ import (
 	"io"
 )
 
-// Helper is the file helper
-type Helper struct {
+// Worker is the file worker
+type Worker struct {
 	hdr   Header
 	state pstate
 	dec   *Decoder
 }
 
-// pstate are the different helper stages
+// pstate are the different worker stages
 type pstate uint32
 
 const (
@@ -28,16 +28,16 @@ type ProtData interface {
 	Protocol()
 }
 
-// NewHelper makes a new helper given the input stream
-func NewHelper(r io.Reader) Helper {
-	return Helper{
+// NewWorker makes a new worker given the input stream
+func NewWorker(r io.Reader) Worker {
+	return Worker{
 		state: Starting,
 		dec:   NewDecoder(r),
 	}
 }
 
 // Next extracts another record
-func (p Helper) Next() (Record, error) {
+func (p Worker) Next() (Record, error) {
 	if p.state != Ready {
 		err := errors.New("Not Ready - compatible version required")
 		return Record{}, err
@@ -54,7 +54,7 @@ func (p Helper) Next() (Record, error) {
 }
 
 // header extracts header fields
-func (p Helper) header() (Header, error) {
+func (p Worker) header() (Header, error) {
 	if p.state != Starting {
 		err := errors.New("Wrong state - header already consumed")
 		return Header{}, err
@@ -71,7 +71,7 @@ func (p Helper) header() (Header, error) {
 }
 
 // Compatible checks version is supported
-func (p *Helper) Compatible(ver byte) bool {
+func (p *Worker) Compatible(ver byte) bool {
 	// todo ?Do we accept future/greater version values
 
 	// Re-entrant, only process header fields once
@@ -79,7 +79,7 @@ func (p *Helper) Compatible(ver byte) bool {
 		var err error
 		p.hdr, err = p.header()
 		if err != nil {
-			// Mark helper state as in recovery,
+			// Mark worker state as in recovery,
 			// to do self-repair
 			p.state = Recovery
 			return false
@@ -95,7 +95,7 @@ func (p *Helper) Compatible(ver byte) bool {
 }
 
 // Len is the record count
-func (p Helper) Len() uint32 {
+func (p Worker) Len() uint32 {
 	if p.state&(Ready|Compatible) != 0 {
 		// Ready or Compatible state are when
 		// the header fields are okay

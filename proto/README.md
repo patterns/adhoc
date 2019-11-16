@@ -1,5 +1,11 @@
 # proto &quot;MPS7&quot;
 
+The high level program flow:
+![State change](diagram/flow.svg)
+
+Decoding the data stream transitions state from Starting to Ready:
+![State change](diagram/state.svg)
+
 ## Quickstart
 1. git clone the repo
 2. build the executable
@@ -7,7 +13,7 @@
 
 ```
 git clone https://github.com/patterns/adhoc
-cd adhoc &amp;&amp; go build -o proto proto/cmd/*.go
+cd adhoc && go build -o proto proto/cmd/*.go
 ./proto -infile=path/to/txnlog.dat
 ```
 
