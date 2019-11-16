@@ -22,8 +22,8 @@ func TestHeader(t *testing.T) {
 	// Make io.Reader for the buffer
 	nb := bytes.NewBuffer(buf)
 
-	// Start the helper with the input stream
-	hlp := NewHelper(nb)
+	// Start the worker with the input stream
+	hlp := NewWorker(nb)
 
 	// Direct call to the Header matching
 	hd, err := hlp.header()
@@ -56,8 +56,8 @@ func TestHeaderCompatible(t *testing.T) {
 	// Make io.Reader for the buffer
 	nb := bytes.NewBuffer(buf)
 
-	// Start the helper with the input stream
-	hlp := NewHelper(nb)
+	// Start the worker with the input stream
+	hlp := NewWorker(nb)
 
 	// Run the Header format matching
 	// and check the spec version
@@ -72,7 +72,7 @@ func TestHeaderCompatible(t *testing.T) {
 	}
 
 	if hlp.state != Ready {
-		t.Error("Expected Helper state to have advanced to Ready")
+		t.Error("Expected Worker state to have advanced to Ready")
 	}
 }
 
@@ -90,8 +90,8 @@ func TestHeaderRecordLen(t *testing.T) {
 	// Make io.Reader for the buffer
 	nb := bytes.NewBuffer(buf)
 
-	// Start the Helper with the input stream
-	hlp := NewHelper(nb)
+	// Start the Worker with the input stream
+	hlp := NewWorker(nb)
 
 	// Run the Header format matching
 	// and check the spec version
@@ -106,7 +106,7 @@ func TestHeaderRecordLen(t *testing.T) {
 	}
 
 	if hlp.state != Ready {
-		t.Error("Expected Helper state to have advanced to Ready")
+		t.Error("Expected Worker state to have advanced to Ready")
 	}
 }
 
@@ -117,7 +117,7 @@ func TestRecordFields(t *testing.T) {
 	// Run the Record format matching
 	rec, err := hlp.Next()
 	if err != nil {
-		t.Error("Helper Next call failed on error")
+		t.Error("Worker Next call failed on error")
 	}
 
 	// Verify stamp field
@@ -145,7 +145,7 @@ func TestRecordDebit(t *testing.T) {
 	// Run the Record format matching
 	rec, err := hlp.Next()
 	if err != nil {
-		t.Error("Helper Next call failed on error")
+		t.Error("Worker Next call failed on error")
 	}
 
 	// Verify stamp field
@@ -178,7 +178,7 @@ func TestRecordCredit(t *testing.T) {
 	// Run the Record format matching
 	rec, err := hlp.Next()
 	if err != nil {
-		t.Error("Helper Next call failed on error")
+		t.Error("Worker Next call failed on error")
 	}
 
 	// Verify stamp field
@@ -204,10 +204,10 @@ func TestRecordCredit(t *testing.T) {
 }
 
 ////////
-// test helper routines
+// test worker routines
 ////////
 
-func newRecordTestData(rt Rtype, dollars ...float64) (h Helper, u uint64, s time.Time) {
+func newRecordTestData(rt Rtype, dollars ...float64) (h Worker, u uint64, s time.Time) {
 	// Expected field values for the test
 	exptype := rt
 	expuser := uint64(12)
@@ -231,8 +231,8 @@ func newRecordTestData(rt Rtype, dollars ...float64) (h Helper, u uint64, s time
 	// Make a io.Reader for buffer
 	nb := bytes.NewBuffer(buf)
 
-	// Start the helper with the input stream
-	h = NewHelper(nb)
+	// Start the worker with the input stream
+	h = NewWorker(nb)
 	u = expuser
 	s = expstamp
 

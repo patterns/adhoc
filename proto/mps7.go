@@ -89,7 +89,6 @@ func (dec *Decoder) decodeHdr(hdr *Header) error {
 	// Read in network byte order
 	err := binary.Read(dec.r, binary.BigEndian, &data)
 	if err != nil {
-		return errors.Wrap(err, "Decode failed - header binary.Read")
 		return errors.Wrap(err, "Decode failed - data does not match 4|1|4 bytes")
 	}
 

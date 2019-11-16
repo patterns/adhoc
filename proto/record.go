@@ -28,7 +28,7 @@ func (r Record) Protocol() {
 }
 
 func (r Record) String() string {
-	return fmt.Sprintf("%s, %d, %d - %f",
+	return fmt.Sprintf("%s, %d, %d, %f",
 		r.Rectype, r.stamp, r.User, r.Dollars)
 }
 

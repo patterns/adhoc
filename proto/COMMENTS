@@ -1,0 +1,26 @@
+Compiling the Proto homework
+
+Golang is required to compile the program. If your machine does not have the Golang toolchain, please visit https://golang.org/doc/install and follow the installation steps.
+
+Uncompress the source files:
+
+tar -xzf homework.tgz
+
+This should make a copy of the file set and save them into the local directory "adhoc". Next, change into "adhoc" to make it the working directory and compile:
+
+cd adhoc && go build -o homework ./proto/cmd
+
+This will create and name the program as "homework". To have the program process the "txnlog.dat" file, there are two ways. If you have permission to add files to the directory where "txnlog.dat" is located, copying the "homework" program there should work because the program defaults to looking for "txnlog.dat" in the same directory.
+
+The other way is better if the "txnlog.dat" can have different names (e.g., txnlog10.dat). The "homework" program will take a command line argument (-infile) to specify the path of the .dat file:
+
+./homework -infile=path/to/dat/file
+
+ 
+If everything is okay, the summary should print to screen, similar to:
+
+ total credit amount=9366.02
+ total debit amount=18203.70
+ autopays started=10
+ autopays ended=8
+ balance for user 2456938384156277127=0.00

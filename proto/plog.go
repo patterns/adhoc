@@ -38,6 +38,9 @@ func NewLog(verbose bool) (pl *Plog, err error) {
 			return
 		}
 
+		pl.SetFlags(log.LstdFlags)
+		pl.SetPrefix(fmt.Sprintf("%s:", pl.prefix))
+
 		// Direct log output to the file
 		pl.SetOutput(pl.writer)
 	}
