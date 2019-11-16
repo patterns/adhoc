@@ -1,9 +1,12 @@
 # proto &quot;MPS7&quot;
 
 The high level program flow:
+
 ![State change](diagram/flow.svg)
 
+
 Decoding the data stream transitions state from Starting to Ready:
+
 ![State change](diagram/state.svg)
 
 ## Quickstart
