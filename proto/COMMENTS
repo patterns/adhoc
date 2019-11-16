@@ -4,7 +4,7 @@ Golang is required to compile the program. If your machine does not have the Gol
 
 Uncompress the source files:
 
-tar xvf homework.tar.gz
+tar -xzf homework.tgz
 
 This should make a copy of the file set and save them into the local directory "adhoc". Next, change into "adhoc" to make it the working directory and compile:
 
